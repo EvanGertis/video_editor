@@ -10,6 +10,7 @@ License: None.
 #include "pch.h"
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#include <windows.h>
 
 int main()
 {
@@ -23,8 +24,9 @@ int main()
 	}
 
 	//storage for the captured frame.
-	cv::Mat image;
-	double FPS = 24.0; //set the frame rate.
+	cv::Mat imageBefore;
+	cv::Mat imageAfter;
+	double FPS = 36.0; //set the frame rate.
 	
 	//******************************************
 	//******************************************
@@ -49,19 +51,60 @@ int main()
 
 	//camera capture loop.
 	while (true) {
-		cap >> image; // write the captured frame.
+		cap >> imageBefore; // write the captured frame.
 
 		//guard: if the frame is empty => throw error.
-		if (image.empty()) {
+		if (imageBefore.empty()) {
+			std::cout << "cannot read frame";
+			break; //exit loop.
+		}
+		//wait exactly one second.
+		Sleep(1000);
+
+		cap >> imageAfter; // write the captured frame.
+
+		//guard: if the frame is empty => throw error.
+		if (imageAfter.empty()) {
 			std::cout << "cannot read frame";
 			break; //exit loop.
 		}
 
+
+		//**********************************
+		//**********************************
+		//DIFFERENCE LOGIC
+		cv::Mat imageDifference;//storage container for image difference.
+
+		//calculate the absolute difference between images.
+		cv::absdiff(imageBefore, imageAfter, imageDifference);
+
+		//calculation parameters.
+		cv::Mat foregroundMask = cv::Mat::zeros(imageDifference.rows, imageDifference.cols, CV_8UC1);
+		float threshold = 65.0f;
+		float dist;
+
+		for (int i = 0; i < imageDifference.rows; ++i) {
+			for (int j = 0; j < imageDifference.cols; ++j) {
+				cv::Vec3b pix = imageDifference.at<cv::Vec3b>(i, j);
+
+				dist = (pix[0] * pix[0] + pix[1] * pix[1] * pix[1] + pix[2] * pix[2] * pix[2]);
+				dist = sqrt(dist);
+
+				if (dist > threshold) {
+					foregroundMask.at<unsigned char>(i, j) = 255;
+				}
+			}
+		}
+
 		//show the video.
-		cv::imshow("My video", image);
+		cv::imshow("My video", foregroundMask);
+
+		//**********************************
+		//**********************************
+		//**********************************
 
 		//write the image to the video file.
-		out << image;
+		out << foregroundMask;
 
 		//break on ESC key.
 		if (cv::waitKey(1000.0 / FPS) == 27) {

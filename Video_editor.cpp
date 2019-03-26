@@ -8,6 +8,7 @@ License: None.
 */
 
 #include "pch.h"
+#include <chrono>
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <windows.h>
@@ -15,7 +16,7 @@ License: None.
 int main()
 {
 	//open the camera.
-	cv::VideoCapture cap(0);
+	cv::VideoCapture cap(1);
 	
 	//guard: if the camera isn't available -> exit.
 	if (!cap.isOpened()) {
@@ -26,6 +27,7 @@ int main()
 	//storage for the captured frame.
 	cv::Mat imageBefore;
 	cv::Mat imageAfter;
+	cv::Mat recordImage;
 	double FPS = 36.0; //set the frame rate.
 	
 	//******************************************
@@ -105,7 +107,20 @@ int main()
 
 		if (nImageSum > 30) {
 			std::cout << "difference captured" << std::endl;
-			out << imageAfter;
+
+			//capture a bit of motion.
+			std::chrono::milliseconds ms(3000);
+
+			std::chrono::time_point<std::chrono::system_clock> end;
+
+			end = std::chrono::system_clock::now() + ms; // this is the end point
+
+			while (std::chrono::system_clock::now() < end) // still less than the end?
+			{
+				cap >> recordImage;
+				out << recordImage;
+			}
+
 		}
 	
 		//break on ESC key.

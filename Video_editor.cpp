@@ -52,17 +52,13 @@ int main()
 	//camera capture loop.
 	while (true) {
 		cap >> imageBefore; // write the captured frame.
-
 		//guard: if the frame is empty => throw error.
 		if (imageBefore.empty()) {
 			std::cout << "cannot read frame";
 			break; //exit loop.
 		}
-		//wait exactly one second.
-		Sleep(1000);
 
 		cap >> imageAfter; // write the captured frame.
-
 		//guard: if the frame is empty => throw error.
 		if (imageAfter.empty()) {
 			std::cout << "cannot read frame";
@@ -103,9 +99,15 @@ int main()
 		//**********************************
 		//**********************************
 
-		//write the image to the video file.
-		out << foregroundMask;
+		float nImageSum = cv::sum(foregroundMask)[0] / 100000;
 
+		//write the image to the video file.
+
+		if (nImageSum > 30) {
+			std::cout << "difference captured" << std::endl;
+			out << imageAfter;
+		}
+	
 		//break on ESC key.
 		if (cv::waitKey(1000.0 / FPS) == 27) {
 			break; //exits the loop.

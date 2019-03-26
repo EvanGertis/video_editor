@@ -26,6 +26,27 @@ int main()
 	cv::Mat image;
 	double FPS = 24.0; //set the frame rate.
 	
+	//******************************************
+	//******************************************
+	//******************************************
+	//BEGIN VIDEO EDITING VARS
+	int width = static_cast<int>(cap.get(CV_CAP_PROP_FRAME_WIDTH)); // stores the frame width.
+	int height = static_cast<int>(cap.get(CV_CAP_PROP_FRAME_HEIGHT)); // stores the frame height.
+
+	//open a video file for writing, file type mp4.
+	cv::VideoWriter out("output.mov", CV_FOURCC('m', 'p', '4', 'v'), FPS, cv::Size(width, height), true);
+
+	//guard: if we can't write to the file then throw error.
+	if (!out.isOpened()) {
+		std::cout << "cannot open file for writing" << std::endl;
+		std::exit(-1);
+	}
+
+	//******************************************
+	//******************************************
+	//******************************************
+
+
 	//camera capture loop.
 	while (true) {
 		cap >> image; // write the captured frame.
@@ -38,6 +59,9 @@ int main()
 
 		//show the video.
 		cv::imshow("My video", image);
+
+		//write the image to the video file.
+		out << image;
 
 		//break on ESC key.
 		if (cv::waitKey(1000.0 / FPS) == 27) {
